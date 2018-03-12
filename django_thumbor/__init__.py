@@ -80,7 +80,7 @@ def generate_url(image_url, alias=None, **kwargs):
         'thumbor_server', conf.THUMBOR_SERVER)
 
     encrypted_url = crypto.generate(
-        image_url=image_url,
+        image_url=image_url.strip('/'),
         **final_args)
 
     return _urljoin(thumbor_server, encrypted_url)
