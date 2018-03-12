@@ -10,6 +10,13 @@ logger = logging.getLogger(__name__)
 crypto = CryptoURL(key=conf.THUMBOR_SECURITY_KEY)
 
 
+def _urljoin(*parts):
+    joined = '/'.join([str(p).strip('/') for p in parts])
+    if str(parts[-1]).endswith('/') and not joined.endswith('/'):
+        joined += '/'
+    return joined
+
+
 def _remove_prefix(url, prefix):
     if url.startswith(prefix):
         return url[len(prefix):]
@@ -23,16 +30,14 @@ def _remove_schema(url):
 def _prepend_media_url(url):
     if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
         url = _remove_prefix(url, settings.MEDIA_URL)
-        url.lstrip('/')
-        return '%s/%s' % (conf.THUMBOR_MEDIA_URL, url)
+        return _urljoin(conf.THUMBOR_MEDIA_URL, url)
     return url
 
 
 def _prepend_static_url(url):
     if conf.THUMBOR_STATIC_ENABLED and url.startswith(settings.STATIC_URL):
         url = _remove_prefix(url, settings.STATIC_URL)
-        url.lstrip('/')
-        return '%s/%s' % (conf.THUMBOR_STATIC_URL, url)
+        return _urljoin(conf.THUMBOR_STATIC_URL, url)
     return url
 
 
@@ -72,10 +77,10 @@ def generate_url(image_url, alias=None, **kwargs):
     final_args.update(kwargs)
 
     thumbor_server = final_args.pop(
-        'thumbor_server', conf.THUMBOR_SERVER).rstrip('/')
+        'thumbor_server', conf.THUMBOR_SERVER)
 
     encrypted_url = crypto.generate(
         image_url=image_url,
-        **final_args).strip('/')
+        **final_args)
 
-    return '%s/%s' % (thumbor_server, encrypted_url)
+    return _urljoin(thumbor_server, encrypted_url)
